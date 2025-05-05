@@ -171,7 +171,11 @@ app.get("/perfil", autenticarToken, async (req, res) => {
 
 // ---------- CLIENTES ----------
 app.get("/clientes", autenticarToken, async (req, res) => {
-  const result = await client.query("SELECT * FROM clientes");
+  const result = await client.query(`
+    SELECT c.*, e.rua, e.cidade, e.estado, e.cep
+    FROM clientes c
+    LEFT JOIN enderecos e ON c.id = e.cliente_id
+  `);
   res.json(result.rows);
 });
 
@@ -276,7 +280,11 @@ app.delete("/categorias/:id", autenticarToken, async (req, res) => {
 
 // ---------- PRODUTOS ----------
 app.get("/produtos", autenticarToken, async (req, res) => {
-  const result = await client.query("SELECT * FROM produtos");
+  const result = await client.query(`
+    SELECT p.*, c.nome AS categoria_nome
+    FROM produtos p
+    LEFT JOIN categorias c ON p.categoria_id = c.id
+  `);
   res.json(result.rows);
 });
 
@@ -312,7 +320,11 @@ app.delete("/produtos/:id", autenticarToken, async (req, res) => {
 
 // ---------- PEDIDOS ----------
 app.get("/pedidos", autenticarToken, async (req, res) => {
-  const result = await client.query("SELECT * FROM pedidos");
+  const result = await client.query(`
+    SELECT p.*, c.nome AS cliente_nome, c.email
+    FROM pedidos p
+    LEFT JOIN clientes c ON p.cliente_id = c.id
+  `);
   res.json(result.rows);
 });
 
@@ -348,7 +360,12 @@ app.delete("/pedidos/:id", autenticarToken, async (req, res) => {
 
 // ---------- PAGAMENTOS ----------
 app.get("/pagamentos", autenticarToken, async (req, res) => {
-  const result = await client.query("SELECT * FROM pagamentos");
+  const result = await client.query(`
+    SELECT pag.*, ped.status AS pedido_status, cli.nome AS cliente_nome
+    FROM pagamentos pag
+    LEFT JOIN pedidos ped ON pag.pedido_id = ped.id
+    LEFT JOIN clientes cli ON ped.cliente_id = cli.id
+  `);
   res.json(result.rows);
 });
 
@@ -384,7 +401,12 @@ app.delete("/pagamentos/:id", autenticarToken, async (req, res) => {
 
 // ---------- PEDIDO ITENS ----------
 app.get("/pedido_itens", autenticarToken, async (req, res) => {
-  const result = await client.query("SELECT * FROM pedido_itens");
+  const result = await client.query(`
+    SELECT pi.*, p.nome AS produto_nome, p.preco AS produto_preco, ped.cliente_id
+    FROM pedido_itens pi
+    LEFT JOIN produtos p ON pi.produto_id = p.id
+    LEFT JOIN pedidos ped ON pi.pedido_id = ped.id
+  `);
   res.json(result.rows);
 });
 
